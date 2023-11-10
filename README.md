@@ -32,6 +32,9 @@ nix run home-manager
 home-manager switch --impure
 ```
 
+## License
+[GPL-3.0 license](LICENSE)
+
 [dotfiles]: https://dotfiles.github.io/
 [nix page]: https://nixos.org/learn
 [home-manager page]: https://github.com/nix-community/home-manager
