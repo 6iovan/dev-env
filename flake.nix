@@ -1,23 +1,39 @@
 {
-  description = "Home Manager configuration of GiovanFong";
+  description = "rusty devenv";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/release-23.05";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    home-manager = {
-      # url = "github:nix-community/home-manager";
-      url = "github:nix-community/home-manager/release-23.05";
-      # url = "github:nix-community/home-manager/unstable";
-      # inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
-  outputs = inputs@{ nixpkgs, nixpkgs-unstable, home-manager, ... }: {
-    homeConfigurations."GiovanFong" =
-      home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages."x86_64-linux";
-        extraSpecialArgs = { inherit inputs; };
-        modules = [ ./modules/common/configuration.nix ./home.nix ];
+  outputs = { self, nixpkgs, home-manager, rust-overlay, ... }@inputs:
+    let
+      inherit (self) outputs;
+      SYSTEM = builtins.currentSystem;
+      USER = builtins.getEnv "USER";
+      HOME = builtins.getEnv "HOME";
+    in {
+      overlays = import ./overlays { inherit inputs; };
+
+      homeConfigurations = {
+        ${USER} = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.${SYSTEM};
+          extraSpecialArgs = { inherit inputs outputs; };
+          modules = [
+            {
+              home = {
+                stateVersion = "23.11";
+                username = USER;
+                homeDirectory = HOME;
+              };
+            }
+            ./home-manager/configuration.nix
+            ./home-manager/home.nix
+          ];
+        };
       };
-  };
+    };
+
 }
